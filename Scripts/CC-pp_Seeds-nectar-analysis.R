@@ -9,8 +9,6 @@ library(ggplot2)
 library(plotrix)
 
 
-######################### Functions
-
 
 ######################### Datasets
 
@@ -2676,3 +2674,5 @@ prbarplot=barplot(prmean, ylim=c(0,3), xlab="Treatment",ylab="Mean Corn Marigold
 arrows(prbarplot,prmean+prse,prbarplot,prmean-prse,angle=90,code=3,length=0.1)
 abline(h=0)
 
+
+#####

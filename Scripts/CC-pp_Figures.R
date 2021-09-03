@@ -191,6 +191,27 @@ head(plot_SE, n=10)
 write.csv(plot_SE, "Data/PlotLevel_Summary_Long.csv", row.names=FALSE)
 
 
+# version with values for both years combined:
+plot_SE_comb = Reduce(rbind,
+                 lapply(plot_name_ls, function(x) {
+                   df = summarySE(plot_df, measurevar=x, groupvars=c("Treatment"), na.rm = TRUE)
+                   df[, c(7, 1:6)]
+                 }
+                 )
+)
+head(plot_SE_comb)
+#       Variable  Treatment  N      mean         sd          se         ci
+# 1 WConnectance    Control 12 0.1675333 0.04191961 0.012101149 0.02663445
+# 2 WConnectance       Heat 12 0.2052239 0.05754110 0.016610686 0.03655987
+# 3 WConnectance Heat+Water 12 0.2130770 0.04313140 0.012450964 0.02740439
+# 4 WConnectance      Water 12 0.1750102 0.02422804 0.006994033 0.01539376
+# 5 GeneralityHL    Control 12 1.4110251 0.25363967 0.073219466 0.16115496
+# 6 GeneralityHL       Heat 12 1.4342823 0.28841603 0.083258537 0.18325080
+
+# save this file:
+write.csv(plot_SE_comb, "Data/PlotLevel_Summary_Combined-years_Long.csv", row.names=FALSE)
+
+
 
 #
 ########################## 2. Flower data ####
@@ -426,108 +447,6 @@ ggplot(nectar_long, aes(x=Treatment, y=Nectar, fill=Species)) +
         legend.text = element_text(size=9.5),
         axis.text = element_text(colour = "black"),
        # panel.spacing.y = unit(0.3, "lines"),
-        panel.spacing.x = unit(0.3, "lines"),
-        axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
-        panel.grid.major.x = element_blank(),
-        strip.text.x = element_text(size = 10, margin = margin(1,0,1,0, "mm")),
-        axis.title.y = element_text(size=10, margin=margin(t=0, r=5, b=0, l=0)),
-        axis.title.x = element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
-        strip.text = element_text(face = "italic"),
-        legend.position = "bottom",
-        legend.margin=margin(t=-2, r=0, b=0, l=-10),
-        plot.margin=unit(c(1,1,1,1),"mm"))
-dev.off()
-
-
-
-#
-##### 2.3 Nectar volumes - including transformation ####
-
-# the nectar volume for cornflower had to be transformed during the analysis, so I will make another 
-# version of the above plot where the correct transformation (cube root) is applied.
-
-vir_lite = function(cols, ds=0.4, dv=0.7) {
-  cols = rgb2hsv(col2rgb(cols))
-  cols["v", ] = cols["v", ] + dv*(1 - cols["v", ])
-  cols["s", ] = ds*cols["s", ]
-  apply(cols, 2, function(x) hsv(x[1], x[2], x[3]))
-}
-vir_lite(viridis(5), ds=0.6, dv=0.6)
-# [1] "#A54CBB" "#899DD1" "#71D3CF" "#9EE9A2" "#FEF17C"
-
-# load the data:
-multi_df = read.csv("Data/AllData_MultiPlot_BothYears.csv",header=TRUE,sep=",", as.is=TRUE, na.strings="(null)")
-multi_df[, c(3:4, 6:8, 10:22, 24:27)] = lapply(multi_df[, c(3:4, 6:8, 10:22, 24:27)], as.numeric)
-
-# transform the values for cornflower nectar:
-multi_df$CF15_Nectar = multi_df$CF15_Nectar^(1/3)
-
-# melt the data and re-lvel the factors to match the species ordering of the seed plots:
-nectar_long = melt(multi_df[, c(1, 2, 25:27)],
-                   id.vars = c("Treatment", "Plot"),
-                   variable.name = "Species", value.name = "Nectar")
-nectar_long$Species = as.character(nectar_long$Species)
-nectar_long$Species = factor(nectar_long$Species, 
-                             levels = c("CF15_Nectar", "SW15_Nectar", "RDN15_Nectar"),
-                             labels = c("C. cyanus", "V. persica", "L. purpureum"))
-
-
-# vertical facet plot:
-ppi = 300
-png("Figures/Nectar_transformed_facet_35-6.png", width=3.5*ppi, height=6*ppi, res=ppi)
-#pdf("Figures/Nectar_transformed_facet_35-6.pdf", width=3.5, height=6)
-ggplot(nectar_long, aes(x=Treatment, y=Nectar, fill=Species)) +
-  geom_bar(position=position_dodge(0.7), width = 0.7, stat = 'summary', fun = mean, colour="black" , size=0.4) +
-  geom_point(aes(x = Treatment, y=Nectar), shape = 21, size = 1.1,
-             position = position_jitterdodge(jitter.width = 0.2, jitter.height=0, dodge.width=0.7)) +
-  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.7), size=0.4, width = 0.35) +
-  xlab("Treatment") +
-  ylab("Floral nectar volume (\U003BCL)") +
-  facet_wrap(~ Species, nrow =3, scales = "free_y") +
-  scale_fill_manual(values = c("#A54CBB", "#71D3CF", "#FEF17C"), labels = c("C. cyanus", "V. persica", "L. purpureum")) +
-  guides(fill = guide_legend(label.theme = element_text(face = "italic",size = 9), nrow = 2)) +
-  #scale_x_discrete(expand = c(0.1, 0.1)) +
-  scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
-  theme_bw() +
-  theme(legend.title=element_text(size=10),
-        legend.text = element_text(size=9.5),
-        axis.text = element_text(colour = "black"),
-        panel.spacing.y = unit(0.3, "lines"),
-        axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
-        panel.grid.major.x = element_blank(),
-        strip.text.x = element_text(size = 10, margin = margin(1,0,1,0, "mm")),
-        axis.title.y = element_text(size=10, margin=margin(t=0, r=5, b=0, l=0)),
-        axis.title.x = element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
-        strip.text = element_text(face = "italic"),
-        legend.position = "bottom",
-        #legend.position = c(0.22, -0.13), 
-        #legend.direction = "horizontal",
-        legend.margin=margin(t=-2, r=0, b=0, l=-10),
-        plot.margin=unit(c(1,1,1,1),"mm"))
-dev.off()
-
-
-# horizontal facet plot:
-ppi = 300
-png("Figures/Nectar_transformed_facet_7-24.png", width=7*ppi, height=2.4*ppi, res=ppi)
-#pdf("Figures/Nectar_trasformed_facet_7-24.pdf", width=7, height=2.4)
-ggplot(nectar_long, aes(x=Treatment, y=Nectar, fill=Species)) +
-  geom_bar(position=position_dodge(0.7), width = 0.7, stat = 'summary', fun = mean, colour="black" , size=0.4) +
-  geom_point(aes(x = Treatment, y=Nectar), shape = 21, size = 1.1,
-             position = position_jitterdodge(jitter.width = 0.3, jitter.height=0, dodge.width=0.7)) +
-  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.7), size=0.4, width = 0.4) +
-  xlab("Treatment") +
-  ylab("Floral nectar volume (\U003BCL)") +
-  facet_wrap(~ Species, nrow =1, scales = "free_y") +
-  scale_fill_manual(values = c("#A54CBB", "#71D3CF", "#FEF17C"), labels = c("C. cyanus", "V. persica", "L. purpureum")) +
-  guides(fill = guide_legend(label.theme = element_text(face = "italic",size = 9))) +
-  scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
-  scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
-  theme_bw() +
-  theme(legend.title=element_text(size=10),
-        legend.text = element_text(size=9.5),
-        axis.text = element_text(colour = "black"),
-        # panel.spacing.y = unit(0.3, "lines"),
         panel.spacing.x = unit(0.3, "lines"),
         axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
         panel.grid.major.x = element_blank(),
@@ -1237,230 +1156,6 @@ plot_grid(plot_panel)
 dev.off()
 
 
-
-#
-#### 7.4 Combined Number and weight cowplot - transformed data ####
-
-# Some of the seed data had to be transformed during the analysis, so I will make another 
-# version of the above plot where the correct transformations are applied.
-
-
-vir_lite = function(cols, ds=0.4, dv=0.7) {
-  cols = rgb2hsv(col2rgb(cols))
-  cols["v", ] = cols["v", ] + dv*(1 - cols["v", ])
-  cols["s", ] = ds*cols["s", ]
-  apply(cols, 2, function(x) hsv(x[1], x[2], x[3]))
-}
-
-vir_lite(viridis(5), ds=0.7, dv=0.7)
-
-# load the data:
-multi_df = read.csv("Data/AllData_MultiPlot_BothYears.csv",header=TRUE,sep=",", as.is=TRUE, na.strings="(null)")
-multi_df[, c(3:4, 6:8, 10:22, 24:27)] = lapply(multi_df[, c(3:4, 6:8, 10:22, 24:27)], as.numeric)
-
-# change the seed weight columns from grams to mg (so the values are easier to interpret):
-multi_df$CF14_AWeight = multi_df$CF14_AWeight *1000
-multi_df$CM14_AWeight = multi_df$CM14_AWeight*1000
-multi_df$CF15_AWeight = multi_df$CF15_AWeight *1000
-multi_df$CM15_AWeight = multi_df$CM15_AWeight*1000
-multi_df$RDN15_AWeight = multi_df$RDN15_AWeight*1000
-multi_df$SW15_AWeight = multi_df$SW15_AWeight*1000
-multi_df$CW15_AWeight = multi_df$CW15_AWeight*1000
-
-# transform the relevant variables:
-multi_df$SW15_AWeight = log(multi_df$SW15_AWeight)
-multi_df$CW15_AWeight = multi_df$CW15_AWeight^2
-
-# melt the seed data into long format dfs, one for seed number, one for seed weight:
-str(multi_df[, c(1, 2, 3, 7, 15, 17, 19, 21)])
-seed_n_long = melt(multi_df[, c(1, 2, 3, 7, 15, 17, 19, 21)],
-                   id.vars = c("Treatment", "Plot"),
-                   variable.name = "Species", value.name = "Seed_Number")
-
-str(multi_df[, c(1, 2, 4, 8, 14, 16, 18, 20, 22)])
-seed_w_long = melt(multi_df[, c(1, 2, 4, 8, 14, 16, 18, 20, 22)],
-                   id.vars = c("Treatment", "Plot"),
-                   variable.name = "Species", value.name = "Seed_Weight")
-
-
-
-#### Seed number plotting
-
-# I need to relevel the species factor, and create a new factor for colouring (with fewer levels)
-seed_n_long$Species = as.character(seed_n_long$Species)
-unique(seed_n_long$Species)
-# [1] "CF14_Seeds" "CM14_Seeds" "SW15_Seeds" "CW15_Seeds" "CF15_Seeds" "CM15_Seeds"
-seed_n_long$Species_colour = seed_n_long$Species
-seed_n_long$Species_colour = factor(seed_n_long$Species_colour, 
-                                    levels = c("CF14_Seeds", "CF15_Seeds", "CM14_Seeds", "CM15_Seeds", "SW15_Seeds", "CW15_Seeds"),
-                                    labels = c("C. cyanus", "C. cyanus", "G. segetum", "G. segetum", "V. persica", "S. media"))
-
-
-seed_n_long$Species = factor(seed_n_long$Species, 
-                             levels = c("CF14_Seeds", "CF15_Seeds", "CM14_Seeds", "CM15_Seeds", "SW15_Seeds", "CW15_Seeds"),
-                             labels = c("C. cyanus 2014", "C. cyanus 2015", "G. segetum 2014", "G. segetum 2015", "V. persica", "S. media"))
-
-# this makes the species names itlaic, but leaves the year not italic:
-levels(seed_n_long$Species) = c("italic('C. cyanus ')*(2014)", "italic('C. cyanus ')*(2015)",
-                                "italic('G. segetum ')*(2014)", "italic('G. segetum ')*(2015)",
-                                "italic('V. persica')", "italic('S. media')")
-
-sn_plot = ggplot(seed_n_long, aes(x=Treatment, y=Seed_Number, fill=Species_colour)) +
-  geom_bar(position=position_dodge(0.7), width = 0.7, stat = 'summary', fun = mean, colour="black" , size=0.4) +
-  geom_point(aes(x = Treatment, y=Seed_Number), shape = 21, size = 1,
-             position = position_jitterdodge(jitter.width = 0.3, jitter.height=0, dodge.width=0.7)) +
-  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.7), size=0.4, width = 0.45) +
-  xlab("Treatment") +
-  ylab("Seeds per seedhead") +
-  facet_wrap(~ Species, ncol =3, scales = "free_y", labeller=label_parsed) + # need the labeller function to parse the italic text
-  scale_fill_manual(values = vir_lite(viridis(5), ds=0.6, dv=0.6), name = "Species") +
-  scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
-  guides(fill = guide_legend(label.theme = element_text(face = "italic", size = 9))) +
-  scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
-  theme_bw() + 
-  theme(legend.position="none",
-        axis.text = element_text(colour = "black"),
-        panel.spacing.y = unit(0.2, "lines"),
-        panel.spacing.x = unit(0.3, "lines"),
-        panel.grid.major.x = element_blank(),
-        strip.text.x = element_text(size = 10, margin = margin(0,0,0,0, "mm")),
-        axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
-        axis.title.x=element_text(size=10, margin=margin(t=4, r=0, b=0, l=0)),
-        axis.title.y=element_text(size=10, margin=margin(t=0, r=4, b=0, l=0)),
-        plot.margin=unit(c(1,1,1,1),"mm"))
-
-
-#
-#### Seed weight plotting
-
-# relevel the species factor, and create a new factor for colouring (with fewer levels)
-seed_w_long$Species = as.character(seed_w_long$Species)
-unique(seed_w_long$Species)
-# [1] "CF14_AWeight"  "CM14_AWeight"  "RDN15_AWeight" "SW15_AWeight"  "CW15_AWeight"  "CF15_AWeight"  "CM15_AWeight" 
-seed_w_long$Species_colour = seed_w_long$Species
-seed_w_long$Species_colour = factor(seed_w_long$Species_colour, 
-                                    levels = c("CF14_AWeight", "CF15_AWeight", "CM14_AWeight", "CM15_AWeight", 
-                                               "SW15_AWeight", "CW15_AWeight", "RDN15_AWeight"),
-                                    labels = c("C. cyanus", "C. cyanus", "G. segetum", "G. segetum", 
-                                               "V. persica", "S. media", "L. purpureum"))
-
-seed_w_long$Species = factor(seed_w_long$Species, 
-                             levels = c("CF14_AWeight", "CF15_AWeight", "CM14_AWeight", "CM15_AWeight", 
-                                        "SW15_AWeight", "CW15_AWeight", "RDN15_AWeight"),
-                             labels = c("C. cyanus 2014", "C. cyanus 2015", "G. segetum 2014", "G. segetum 2015", 
-                                        "V. persica", "S. media", "L. purpureum"))
-
-# this makes the species names itlaic, but leaves the year not italic:
-levels(seed_w_long$Species) = c("italic('C. cyanus ')*(2014)", "italic('C. cyanus ')*(2015)",
-                                "italic('G. segetum ')*(2014)", "italic('G. segetum ')*(2015)",
-                                "italic('V. persica')", "italic('S. media')", "italic('L. purpureum')")
-
-sw_plot = ggplot(seed_w_long, aes(x=Treatment, y=Seed_Weight, fill=Species_colour)) +
-  geom_bar(position=position_dodge(0.7), width = 0.7, stat = 'summary', fun = mean, colour="black" , size=.4) +
-  geom_point(aes(x = Treatment, y=Seed_Weight), shape = 21, size = 1,
-             position = position_jitterdodge(jitter.width = 0.3, jitter.height=0, dodge.width=0.7)) +
-  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.7), size=0.4, width = 0.45) +
-  xlab("Treatment") +
-  ylab("Weight per seed (mg)") +
-  facet_wrap(~ Species, ncol =3, scales = "free_y", labeller=label_parsed) + # need the labeller function to parse the italic text
-  scale_fill_manual(values = vir_lite(viridis(5), ds=0.6, dv=0.6), name = "Species") + 
-  scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
-  guides(fill = guide_legend(label.theme = element_text(face = "italic", size = 9), ncol=3)) +
-  scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
-  theme_bw() +
-  theme(legend.title=element_text(size=10),
-        legend.text = element_text(size=9.5),
-        axis.text = element_text(colour = "black"),
-        panel.spacing.y = unit(0.2, "lines"),
-        panel.spacing.x = unit(0.4, "lines"),
-        panel.grid.major.x = element_blank(),
-        strip.text.x = element_text(size = 10, margin = margin(0,0,0,0, "mm")),
-        axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
-        axis.title.x=element_text(size=10, margin=margin(t=-2, r=0, b=0, l=0)),
-        axis.title.y=element_text(size=10, margin=margin(t=0, r=1, b=0, l=0)),
-        legend.margin = margin(t=15, r=0, b=0, l=0),
-        plot.margin=unit(c(1,1,1,1),"mm"))
-
-
-#
-#### Combined plot
-
-plot_panel = plot_grid(sn_plot,
-                       lemon::reposition_legend(sw_plot, 'center', panel=c('panel-3-2','panel-3-3'), plot=TRUE),
-                       labels = c("(a)", "(b)"),
-                       label_size = 11, #scale = 1, label_colour = "blue",
-                       #label_x = 0, label_y = 0.11,
-                       #vjust = -0.005,
-                       align = "v", axis = 'l',
-                       ncol = 1,
-                       rel_heights = c(1, 1.39))
-
-
-ppi = 300
-png("Figures/Seeds_transformed_cowplot_7-8.png", width=7*ppi, height=8*ppi, res=ppi)
-#pdf("Figures/Seeds_transformed_cowplot_7-8.pdf", width=7, height=8)
-plot_grid(plot_panel)
-dev.off()
-
-
-#### Combined barplot
-
-# the speedwell values are negative numbers now, so barplots do not make sense.
-vir_lite(viridis(5))
-# [1] "#BC7BCC" "#AAB8DC" "#99DEDB" "#BBEFBE" "#FEF6A8"
-
-sw_plot = ggplot(seed_w_long, aes(x=Treatment, y=Seed_Weight, fill=Species_colour)) +
-  # geom_bar(position=position_dodge(0.7), width = 0.7, stat = 'summary', fun = mean, colour="black" , size=.4) +
-  #geom_boxplot(aes(x = Treatment, y=Seed_Weight), outlier.shape = NA) +
-  geom_point(aes(x = Treatment, y=Seed_Weight), shape = 21, size = 1,
-             position = position_jitterdodge(jitter.width = 0.3, jitter.height=0, dodge.width=0.7)) +
-  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.7), size=0.4, width = 0.45) +
-  # stat_summary(fun.y=mean, geom="line", 
-  #              #shape=20, 
-  #              size=2, color="red", fill="red") +
-  stat_summary(fun.y = mean, geom = "errorbar", 
-               aes(colour = Species_colour, ymax = ..y.., ymin = ..y..),
-               width = 0.75 ) +
-  scale_colour_manual(values = vir_lite(viridis(5), ds=0.6, dv=0.6), name = "Species") + 
-  xlab("Treatment") +
-  ylab("Weight per seed (mg)") +
-  facet_wrap(~ Species, ncol =3, scales = "free_y", labeller=label_parsed) + # need the labeller function to parse the italic text
-  scale_fill_manual(values = vir_lite(viridis(5), ds=0.6, dv=0.6), name = "Species") + 
-  scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
-  guides(fill = guide_legend(label.theme = element_text(face = "italic", size = 9), ncol=3)) +
-  scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
-  theme_bw() +
-  theme(legend.title=element_text(size=10),
-        legend.text = element_text(size=9.5),
-        axis.text = element_text(colour = "black"),
-        panel.spacing.y = unit(0.2, "lines"),
-        panel.spacing.x = unit(0.4, "lines"),
-        panel.grid.major.x = element_blank(),
-        strip.text.x = element_text(size = 10, margin = margin(0,0,0,0, "mm")),
-        axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
-        axis.title.x=element_text(size=10, margin=margin(t=-2, r=0, b=0, l=0)),
-        axis.title.y=element_text(size=10, margin=margin(t=0, r=1, b=0, l=0)),
-        legend.margin = margin(t=15, r=0, b=0, l=0),
-        plot.margin=unit(c(1,1,1,1),"mm"))
-
-
-
-plot_panel = plot_grid(sn_plot,
-                       lemon::reposition_legend(sw_plot, 'center', panel=c('panel-3-2','panel-3-3'), plot=TRUE),
-                       labels = c("(a)", "(b)"),
-                       label_size = 11, #scale = 1, label_colour = "blue",
-                       #label_x = 0, label_y = 0.11,
-                       #vjust = -0.005,
-                       align = "v", axis = 'l',
-                       ncol = 1,
-                       rel_heights = c(1, 1.39))
-
-
-ppi = 300
-png("Figures/Seeds_transformed_no-bars_cowplot_7-8.png", width=7*ppi, height=8*ppi, res=ppi)
-#pdf("Figures/Seeds_transformed_cowplot_7-8.pdf", width=7, height=8)
-plot_grid(plot_panel)
-dev.off()
 
 #
 #####

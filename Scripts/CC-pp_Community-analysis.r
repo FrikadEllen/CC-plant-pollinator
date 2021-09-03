@@ -56,8 +56,7 @@ years2$Year = as.factor(years2$Year)
 
 
 # 1. Flowering plants ~ year and treatment 
-# 2. Insects ~ year and treatment
-# 3. Extrapolated Insects ~ year and treatment
+# 2. Extrapolated Insects ~ year and treatment
 
 
 
@@ -186,197 +185,7 @@ TukeyHSD(test1)
 
 
 #
-########################### 2. Insects ~ year and treatment ####
-
-adonis1=adonis2(insects_mat~years2$Treatment*years2$Year, method="bray", permutations=999, by = "terms")
-adonis1
-# Permutation test for adonis under reduced model
-# Terms added sequentially (first to last)
-# Permutation: free
-# Number of permutations: 999
-# 
-# adonis2(formula = insects_mat ~ years2$Treatment * years2$Year, permutations = 999, method = "bray", by = "terms")
-#                              Df SumOfSqs      R2       F Pr(>F)    
-# years2$Treatment              3   0.2903 0.04878  1.2803  0.168    
-# years2$Year                   1   2.2943 0.38557 30.3613  0.001 ***
-# years2$Treatment:years2$Year  3   0.3432 0.05768  1.5139  0.114    
-# Residual                     40   3.0226 0.50797                   
-# Total                        47   5.9504 1.00000                   
-# ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-
-adonis2=adonis2(insects_mat~years2$Treatment+years2$Year, method="bray", permutations=999, by = "margin")
-adonis2
-# Permutation test for adonis under reduced model
-# Marginal effects of terms
-# Permutation: free
-# Number of permutations: 999
-# 
-# adonis2(formula = insects_mat ~ years2$Treatment + years2$Year, permutations = 999, method = "bray", by = "margin")
-#                  Df SumOfSqs      R2      F Pr(>F)    
-# years2$Treatment  3   0.2903 0.04878  1.236  0.236    
-# years2$Year       1   2.2943 0.38557 29.310  0.001 ***
-# Residual         43   3.3658 0.56565                  
-# Total            47   5.9504 1.00000                   
-# ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-
-pairwise.adonis2(insects_mat ~ Treatment + Year, method="bray", permutations=999, by = "margin", data = years2)
-# $parent_call
-# [1] "insects_mat ~ Treatment + Year , strata = Null"
-# 
-# $`Control_vs_Heat+Water`
-# Permutation: free
-# Number of permutations: 999
-# 
-# Terms added sequentially (first to last)# 
-#           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-# Treatment  1   0.14438 0.14438  1.5764 0.04697  0.139    
-# Year       1   1.00598 1.00598 10.9836 0.32728  0.001 ***
-# Residuals 21   1.92338 0.09159         0.62574           
-# Total     23   3.07374                 1.00000           
-# ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-# 
-# $Control_vs_Water
-#           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-# Treatment  1   0.02588 0.02588  0.3717 0.00938  0.905    
-# Year       1   1.27154 1.27154 18.2655 0.46082  0.001 ***
-# Residuals 21   1.46190 0.06961         0.52981           
-# Total     23   2.75931                 1.00000           
-# ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-# 
-# $Control_vs_Heat
-#           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-# Treatment  1   0.10264 0.10264  1.2918 0.03434  0.237    
-# Year       1   1.21795 1.21795 15.3284 0.40745  0.001 ***
-# Residuals 21   1.66860 0.07946         0.55821           
-# Total     23   2.98919                 1.00000           
-# ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-# 
-# $`Heat+Water_vs_Water`
-#           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-# Treatment  1   0.12215 0.12215  1.5691 0.04218  0.140    
-# Year       1   1.13877 1.13877 14.6283 0.39326  0.001 ***
-# Residuals 21   1.63479 0.07785         0.56456           
-# Total     23   2.89571                 1.00000           
-# ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-# 
-# $`Heat+Water_vs_Heat`
-#           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-# Treatment  1   0.06804 0.06804  0.8372 0.02272  0.494    
-# Year       1   1.22003 1.22003 15.0124 0.40740  0.001 ***
-# Residuals 21   1.70664 0.08127         0.56988           
-# Total     23   2.99471                 1.00000           
-# ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-# 
-# $Water_vs_Heat
-#           Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-# Treatment  1   0.11741 0.11741  1.8142 0.04122  0.112    
-# Year       1   1.37176 1.37176 21.1973 0.48163  0.001 ***
-# Residuals 21   1.35899 0.06471         0.47715           
-# Total     23   2.84816                 1.00000           
-# ---
-#   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1         
-
-
-########### validation
-
-
-fdist1=vegdist(insects_mat, method="bray")
-fsim=anosim(fdist1, years2$Treatment)
-summary(fsim)
-# Call:
-#   anosim(x = fdist1, grouping = years2$Treatment) 
-# Dissimilarity: bray 
-# 
-# ANOSIM statistic R: -0.02353 
-# Significance: 0.693 
-# 
-# Permutation: free
-# Number of permutations: 999
-# 
-# Upper quantiles of permutations (null model):
-#   90%    95%  97.5%    99% 
-#   0.0521 0.0722 0.0886 0.1135 
-# 
-# Dissimilarity ranks between and within classes:
-#   0%    25%    50%    75% 100%   N
-# Between     1 282.75 557.00 843.25 1128 864
-# Control    12 308.50 607.00 863.50 1120  66
-# Heat        4 268.50 578.50 957.25 1119  66
-# Heat+Water 29 358.50 609.75 841.00 1121  66
-# Water      11 219.50 570.25 799.75 1071  66
-
-plot(fsim)
-
-
-# Betadisperser: test of equality of variances
-test1=with(years2, betadisper(fdist1, years2$Treatment))
-test1
-# Homogeneity of multivariate dispersions
-# 
-# Call: betadisper(d = fdist1, group = years2$Treatment)
-# 
-# No. of Positive Eigenvalues: 30
-# No. of Negative Eigenvalues: 17
-# 
-# Average distance to median:
-#   Control       Heat Heat+Water      Water 
-# 0.3441     0.3418     0.3432     0.3262 
-# 
-# Eigenvalues for PCoA axes:
-#   (Showing 8 of 47 eigenvalues)
-# PCoA1  PCoA2  PCoA3  PCoA4  PCoA5  PCoA6  PCoA7  PCoA8 
-# 2.6232 0.6245 0.4140 0.3344 0.3066 0.2759 0.2244 0.1964 
-
-plot(test1)
-boxplot(test1)
-
-anova(test1)
-# Analysis of Variance Table
-# 
-# Response: Distances
-#           Df   Sum Sq   Mean Sq F value Pr(>F)
-# Groups     3 0.002586 0.0008621  0.2146 0.8858
-# Residuals 44 0.176767 0.0040174      
-
-permutest(test1)
-# Permutation test for homogeneity of multivariate dispersions
-# Permutation: free
-# Number of permutations: 999
-# 
-# Response: Distances
-#           Df   Sum Sq   Mean Sq      F N.Perm Pr(>F)
-# Groups     3 0.002586 0.0008621 0.2146    999  0.881
-# Residuals 44 0.176767 0.0040174     
-
-
-TukeyHSD(test1)
-# Tukey multiple comparisons of means
-# 95% family-wise confidence level
-# 
-# Fit: aov(formula = distances ~ group, data = df)
-# 
-# $group
-# diff         lwr        upr     p adj
-# Heat-Control       -0.0023378250 -0.07142708 0.06675143 0.9997315
-# Heat+Water-Control -0.0008789477 -0.06996820 0.06821031 0.9999857
-# Water-Control      -0.0179144923 -0.08700375 0.05117476 0.8994835
-# Heat+Water-Heat     0.0014588773 -0.06763038 0.07054813 0.9999346
-# Water-Heat         -0.0155766673 -0.08466592 0.05351259 0.9308976
-# Water-Heat+Water   -0.0170355446 -0.08612480 0.05205371 0.9120386
-
-
-
-#
-########################### 3. Extrapolated Insects ~ year and treatment ####
+########################### 2. Extrapolated Insects ~ year and treatment ####
 
 adonis2(insects_mat~years2$Treatment*years2$Year, method="chao", permutations=999, by = "terms")
 # Permutation test for adonis under reduced model
@@ -521,7 +330,7 @@ pairwise.adonis2(insects_mat ~ Treatment, method="chao", permutations=999, by = 
   
 
 
-######## Validation ####
+##### Validation ####
 
 fdist1=vegdist(insects_mat, method="chao")
 
@@ -627,15 +436,6 @@ permutest(test2)
 #   Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 
-######
-
-nmds1=metaMDS(insects_mat, k=3)
-ordiplot(nmds1, type="n")
-ordihull(nmds1, groups=years2$Treatment, draw="polygon", col="grey90", label=F)
-orditorp(nmds1, display="species", col="red", air=0.01)
-orditorp(nmds1, display="sites", #col=years2$Treatment,
-         air=0.01,cex=1.25)
-
-
 
 #
+#####

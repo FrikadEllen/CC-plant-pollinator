@@ -7,7 +7,6 @@ library(ggplot2)
 library(plotrix)
 
 
-######################### Functions
 
 
 ######################### Datasets
@@ -2688,6 +2687,7 @@ legend(1, 2, legend=c("Year 1", "Year 2"), fill=c("grey40", "grey90"))
 
 
 
+#
 ########################## 15. Vulnerability ####
 
 # quick look at the distribution:
@@ -2945,3 +2945,4 @@ legend(1, 10, legend=c("Year 1", "Year 2"), fill=c("grey40", "grey90"))
 
 
 
+####
