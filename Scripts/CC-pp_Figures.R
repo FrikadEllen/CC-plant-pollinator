@@ -59,6 +59,7 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE,
 # 5. Guild stacked bar
 # 6. Combined plot-level plot
 # 7. Seed data
+# 8. Final versions of the figures used in publication
 
 
 
@@ -1158,4 +1159,392 @@ dev.off()
 
 
 #
-#####
+########################## 8. Final versions of the figures used in publication ####
+
+# Frontiers want images in 300 dpi, as tiff or jpeg, and width of 85 or 180mm (the latter is 7.087 inches).
+# They also want the panels of composite plots to be "bold capitalised and in brackets": (A)
+
+
+#
+#### 8.1 Figure 1 - Nectar ####
+
+multi_df = read.csv("Data/AllData_MultiPlot_BothYears.csv",header=TRUE,sep=",", as.is=TRUE, na.strings="(null)")
+str(multi_df)
+multi_df[, c(3:4, 6:8, 10:22, 24:27)] = lapply(multi_df[, c(3:4, 6:8, 10:22, 24:27)], as.numeric)
+
+# I need to melt the nectar data into long format
+nectar_long = melt(multi_df[, c(1, 2, 25:27)],
+                   id.vars = c("Treatment", "Plot"),
+                   variable.name = "Species", value.name = "Nectar")
+head(multi_df[, c(1, 2, 25:27)])
+head(nectar_long)
+str(nectar_long)
+unique(nectar_long$Species)
+nectar_long$Species = as.character(nectar_long$Species)
+nectar_long$Species = factor(nectar_long$Species, 
+                             levels = c("CF15_Nectar", "SW15_Nectar", "RDN15_Nectar"),
+                             labels = c("C. cyanus", "V. persica", "L. purpureum"))
+
+# Extract the viridis colours that match the seed plot:
+vir_lite = function(cols, ds=0.4, dv=0.7) {
+  cols = rgb2hsv(col2rgb(cols))
+  cols["v", ] = cols["v", ] + dv*(1 - cols["v", ])
+  cols["s", ] = ds*cols["s", ]
+  apply(cols, 2, function(x) hsv(x[1], x[2], x[3]))
+}
+vir_lite(viridis(5), ds=0.6, dv=0.6)
+# [1] "#A54CBB" "#899DD1" "#71D3CF" "#9EE9A2" "#FEF17C"
+
+
+jpeg("Figures/Frontiers/Moss_Evans_Figure1_180x62.jpeg", units="mm", width=180, height=62, res=300, quality = 100,
+     type = "cairo")
+ggplot(nectar_long, aes(x=Treatment, y=Nectar, fill=Species)) +
+  geom_bar(position=position_dodge(0.7), width = 0.7, stat = 'summary', fun = mean, colour="black" , size=0.4) +
+  geom_point(aes(x = Treatment, y=Nectar), shape = 21, size = 1.1,
+             position = position_jitterdodge(jitter.width = 0.3, jitter.height=0, dodge.width=0.7)) +
+  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.7), size=0.4, width = 0.4) +
+  xlab("Treatment") +
+  ylab("Floral nectar volume (\U003BCL)") +
+  facet_wrap(~ Species, nrow =1, scales = "free_y") +
+  scale_fill_manual(values = c("#A54CBB", "#71D3CF", "#FEF17C"), labels = c("C. cyanus", "V. persica", "L. purpureum")) +
+  guides(fill = guide_legend(label.theme = element_text(face = "italic",size = 9))) +
+  scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
+  scale_y_continuous(expand = expansion(mult = c(0.003, 0.05))) +
+  theme_bw() +
+  theme(legend.title=element_text(size=10),
+        legend.text = element_text(size=9.5),
+        axis.text = element_text(colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 0.4),
+        panel.spacing.x = unit(0.3, "lines"),
+        axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+        panel.grid.major.x = element_blank(),
+        strip.text.x = element_text(size = 10, margin = margin(1,0,1,0, "mm")),
+        axis.title.y = element_text(size=10, margin=margin(t=0, r=5, b=0, l=0)),
+        axis.title.x = element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
+        strip.text = element_text(face = "italic"),
+        legend.position = "bottom",
+        legend.margin=margin(t=-2, r=0, b=0, l=-10),
+        plot.margin=unit(c(1,1,1,1),"mm"))
+dev.off()
+
+
+#
+#### 8.2 Figure 2 - combined plot-level plot ####
+
+
+plot_df = read.csv("Data/AllData_PlotLevel_BothYears.csv",header=TRUE,sep=",", as.is=TRUE, na.strings="(null)")
+str(plot_df)
+plot_df[, c(23, 29, 32)] = lapply(plot_df[, c(23, 29, 32)], as.numeric)
+plot_df$Year = factor(plot_df$Year,
+                      levels = c(1, 2),
+                      labels = c("2014", "2015"))
+
+guild_df = read.csv("Data/GuildNumbers_BothYears.csv",header=TRUE,sep=",", as.is=TRUE, na.strings="(null)")
+str(guild_df)
+head(guild_df)
+guild_df$Year = as.factor(guild_df$Year)
+guild_df$Guild = factor(guild_df$Guild, 
+                        levels = c("Hoverfly","Fly","Honeybee","Wild_hym"),
+                        labels = c("Syrphidae","Other Diptera","Apis mellifera","Other Hymenoptera"))
+
+
+flowers_p = ggplot(plot_df, aes(x=Treatment, y=TotalFlowers, fill=Year)) +
+  geom_bar(position=position_dodge(0.8), width = 0.8, stat = 'summary', fun = mean, colour="black" , size=.4) +
+  geom_point(aes(x = Treatment, y=TotalFlowers), shape = 21, size = 1.1,
+             position = position_jitterdodge(jitter.width = 0.2, jitter.height=0, dodge.width=0.8)) +
+  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.8), size=0.4, width = 0.45) +
+  xlab("Treatment") +
+  ylab("Floral abundance") +
+  scale_fill_manual(values = c("#FEAF77FF", "#FCFDBFFF")) + # lighted 2 magma(7)
+  scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
+  theme_bw() +
+  theme(legend.margin=margin(t=3, r=0, b=3, l=0))
+
+visits_p = ggplot(plot_df, aes(x=Treatment, y=Visits, fill=Year)) +
+  geom_bar(position=position_dodge(0.8), width = 0.8, stat = 'summary', fun = mean, colour="black" , size=.4) +
+  geom_point(aes(x = Treatment, y=Visits), shape = 21, size = 1.1,
+             position = position_jitterdodge(jitter.width = 0.2, jitter.height=0, dodge.width=0.8)) +
+  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.8), size=0.4, width = 0.45) +
+  xlab("Treatment") +
+  ylab("Insect abundance") +
+  scale_fill_manual(values = c("#FEAF77FF", "#FCFDBFFF")) + # lighted 2 magma(7)
+  scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
+  theme_bw() +
+  theme(legend.margin=margin(t=3, r=0, b=3, l=0))
+
+visits_flowers_p = ggplot(plot_df, aes(x=Treatment, y=VisitsOverFlowers, fill=Year)) +
+  geom_bar(position=position_dodge(0.8), width = 0.8, stat = 'summary', fun = mean, colour="black" , size=.4) +
+  geom_point(aes(x = Treatment, y=VisitsOverFlowers), shape = 21, size = 1.1,
+             position = position_jitterdodge(jitter.width = 0.2, jitter.height=0, dodge.width=0.8)) +
+  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.8), size=0.4, width = 0.45) +
+  xlab("Treatment") +
+  ylab("Visits per flower") +
+  scale_fill_manual(values = c("#FEAF77FF", "#FCFDBFFF")) + # lighted 2 magma(7)
+  scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
+  theme_bw() +
+  theme(legend.margin=margin(t=3, r=0, b=3, l=0))
+
+wconn_p = ggplot(plot_df, aes(x=Treatment, y=WConnectance, fill=Year)) +
+  geom_bar(position=position_dodge(0.8), width = 0.8, stat = 'summary', fun = mean, colour="black" , size=.4) +
+  geom_point(aes(x = Treatment, y=WConnectance), shape = 21, size = 1.1,
+             position = position_jitterdodge(jitter.width = 0.2, jitter.height=0, dodge.width=0.8)) +
+  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.8), size=0.4, width = 0.45) +
+  xlab("Treatment") +
+  ylab("Weighted\nconnectance") +
+  scale_fill_manual(values = c("#FEAF77FF", "#FCFDBFFF")) + # lighted 2 magma(7)
+  scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
+  theme_bw() +
+  theme(legend.margin=margin(t=3, r=0, b=3, l=0))
+
+inteven_p = ggplot(plot_df, aes(x=Treatment, y=InteractionEvenness, fill=Year)) +
+  geom_bar(position=position_dodge(0.8), width = 0.8, stat = 'summary', fun = mean, colour="black" , size=.4) +
+  geom_point(aes(x = Treatment, y=InteractionEvenness), shape = 21, size = 1.1,
+             position = position_jitterdodge(jitter.width = 0.2, jitter.height=0, dodge.width=0.8)) +
+  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.8), size=0.4, width = 0.45) +
+  xlab("Treatment") +
+  ylab("Interaction evenness") +
+  scale_fill_manual(values = c("#FEAF77FF", "#FCFDBFFF")) + # lighted 2 magma(7)
+  scale_y_continuous(expand = expansion(mult = c(0.0, 0.05))) +
+  theme_bw() +
+  theme(legend.margin=margin(t=3, r=0, b=3, l=0))
+
+guild_p = ggplot(guild_df, aes(x=Year, y=Proportion, fill=Guild)) + 
+  geom_bar(position = "stack", stat = "identity", width = 0.8) +
+  xlab("Year") +
+  ylab("Insect proportion") +
+  scale_fill_manual(values=c("#F1605DFF", "#B63679FF", "#721F81FF", "#2D1160FF"), name = "Insect guild") + # darkest 4 reverse magma(7)
+  scale_y_continuous(expand = expansion(mult = c(0.0, 0.0)), limits = c(0, 1)) +
+  theme_bw() +
+  theme(legend.margin=margin(t=3, r=0, b=3, l=0))
+
+
+plot_panel = plot_grid(flowers_p + theme(legend.position="none",
+                                         axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+                                         axis.title.x=element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
+                                         axis.title.y=element_text(size=10, margin=margin(t=0, r=4, b=0, l=0)),
+                                         plot.margin=unit(c(4,2,0,3),"mm"), # left side
+                                         panel.border = element_blank(),
+                                         axis.line    = element_line(color='black'),
+                                         axis.text = element_text(colour = "black"),
+                                         axis.ticks = element_line(colour = "black"),
+                                         panel.grid.major.x = element_blank()), 
+                       visits_p + theme(legend.position="none",
+                                        axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+                                        axis.title.x=element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
+                                        axis.title.y=element_text(size=10, margin=margin(t=0, r=3, b=0, l=0)),
+                                        plot.margin=unit(c(4,2,0,3),"mm"), # right
+                                        panel.border = element_blank(),
+                                        axis.line    = element_line(color='black'),
+                                        axis.text = element_text(colour = "black"),
+                                        axis.ticks = element_line(colour = "black"),
+                                        panel.grid.major.x = element_blank()), 
+                       visits_flowers_p + theme(legend.position="none",
+                                                axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+                                                axis.title.x=element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
+                                                axis.title.y=element_text(size=10, margin=margin(t=0, r=4, b=0, l=0)),
+                                                plot.margin=unit(c(4,2,0,3),"mm"), # left side
+                                                panel.border = element_blank(),
+                                                axis.line    = element_line(color='black'),
+                                                axis.text = element_text(colour = "black"),
+                                                axis.ticks = element_line(colour = "black"),
+                                                panel.grid.major.x = element_blank()), 
+                       guild_p + theme(legend.title=element_text(size=10),
+                                       legend.text = element_text(size=9.5),
+                                       axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+                                       axis.title.x=element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
+                                       axis.title.y=element_text(size=10, margin=margin(t=0, r=4, b=0, l=0)),
+                                       plot.margin=unit(c(4,1,0,3),"mm"), # right
+                                       panel.border = element_blank(),
+                                       axis.line    = element_line(color='black'),
+                                       axis.text = element_text(colour = "black"),
+                                       axis.ticks = element_line(colour = "black"),
+                                       panel.grid.major.x = element_blank()),
+                       wconn_p + theme(legend.position="none",
+                                       axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+                                       axis.title.x=element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
+                                       axis.title.y=element_text(size=10, margin=margin(t=0, r=4, b=0, l=0)),
+                                       plot.margin=unit(c(4,2,0,3),"mm"), # left side
+                                       panel.border = element_blank(),
+                                       axis.line    = element_line(color='black'),
+                                       axis.text = element_text(colour = "black"),
+                                       axis.ticks = element_line(colour = "black"),
+                                       panel.grid.major.x = element_blank()), 
+                       inteven_p + theme(legend.position="none",
+                                         axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+                                         axis.title.x=element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
+                                         axis.title.y=element_text(size=10, margin=margin(t=0, r=4, b=0, l=0)),
+                                         plot.margin=unit(c(4,2,0,3),"mm"), # right
+                                         panel.border = element_blank(),
+                                         axis.line    = element_line(color='black'),
+                                         axis.text = element_text(colour = "black"),
+                                         axis.ticks = element_line(colour = "black"),
+                                         panel.grid.major.x = element_blank()),
+                       labels = c("(A)", "(B)", "(C)", "(D)", "(E)", "(F)"),
+                       label_size = 11,
+                       align = "v", axis = 'l',
+                       ncol = 2)
+
+panel_legend = get_legend(
+  flowers_p + 
+    guides(color = guide_legend(nrow = 1)) +
+    theme(legend.position = "bottom", legend.margin=margin(t=-1, r=0, b=0, l=0),
+          legend.title=element_text(size=10),
+          plot.margin=unit(c(0,0,0,0),"mm"))
+)
+
+
+jpeg("Figures/Frontiers/Moss_Evans_Figure2_180x155.jpeg", units="mm", width=180, height=155, res=300, quality = 100,
+     type = "cairo")
+plot_grid(plot_panel, panel_legend, ncol = 1, rel_heights = c(1, 0.05))
+dev.off()
+
+
+
+#
+#### 8.3 Figure 3 - Seeds plots ####
+
+multi_df = read.csv("Data/AllData_MultiPlot_BothYears.csv",header=TRUE,sep=",", as.is=TRUE, na.strings="(null)")
+str(multi_df)
+# some of the columns have been classed as character, need to set all relevant ones to numeric:
+multi_df[, c(3:4, 6:8, 10:22, 24:27)] = lapply(multi_df[, c(3:4, 6:8, 10:22, 24:27)], as.numeric)
+
+# I need to  melt the seed data into long format dfs, one for seed number, one for seed weight
+str(multi_df[, c(1, 2, 3, 7, 15, 17, 19, 21)])
+seed_n_long = melt(multi_df[, c(1, 2, 3, 7, 15, 17, 19, 21)],
+                   id.vars = c("Treatment", "Plot"),
+                   variable.name = "Species", value.name = "Seed_Number")
+
+str(multi_df[, c(1, 2, 4, 8, 14, 16, 18, 20, 22)])
+seed_w_long = melt(multi_df[, c(1, 2, 4, 8, 14, 16, 18, 20, 22)],
+                   id.vars = c("Treatment", "Plot"),
+                   variable.name = "Species", value.name = "Seed_Weight")
+seed_w_long$Seed_W_mg = seed_w_long$Seed_Weight * 1000
+head(seed_w_long)
+
+
+# seed number data:
+# relevel the species factor, and create a new factor for colouring (with fewer levels)
+seed_n_long$Species = as.character(seed_n_long$Species)
+unique(seed_n_long$Species)
+# [1] "CF14_Seeds" "CM14_Seeds" "SW15_Seeds" "CW15_Seeds" "CF15_Seeds" "CM15_Seeds"
+seed_n_long$Species_colour = seed_n_long$Species
+seed_n_long$Species_colour = factor(seed_n_long$Species_colour, 
+                                    levels = c("CF14_Seeds", "CF15_Seeds", "CM14_Seeds", "CM15_Seeds", "SW15_Seeds", "CW15_Seeds"),
+                                    labels = c("C. cyanus", "C. cyanus", "G. segetum", "G. segetum", "V. persica", "S. media"))
+
+
+seed_n_long$Species = factor(seed_n_long$Species, 
+                             levels = c("CF14_Seeds", "CF15_Seeds", "CM14_Seeds", "CM15_Seeds", "SW15_Seeds", "CW15_Seeds"),
+                             labels = c("C. cyanus 2014", "C. cyanus 2015", "G. segetum 2014", "G. segetum 2015", "V. persica", "S. media"))
+
+# this makes the species names itlaic, but leaves the year not italic:
+levels(seed_n_long$Species) = c("italic('C. cyanus ')*(2014)", "italic('C. cyanus ')*(2015)",
+                                "italic('G. segetum ')*(2014)", "italic('G. segetum ')*(2015)",
+                                "italic('V. persica')", "italic('S. media')")
+
+# seed weight data:
+# relevel the species factor, and create a new factor for colouring (with fewer levels)
+seed_w_long$Species = as.character(seed_w_long$Species)
+unique(seed_w_long$Species)
+# [1] "CF14_AWeight"  "CM14_AWeight"  "RDN15_AWeight" "SW15_AWeight"  "CW15_AWeight"  "CF15_AWeight"  "CM15_AWeight" 
+seed_w_long$Species_colour = seed_w_long$Species
+seed_w_long$Species_colour = factor(seed_w_long$Species_colour, 
+                                    levels = c("CF14_AWeight", "CF15_AWeight", "CM14_AWeight", "CM15_AWeight", 
+                                               "SW15_AWeight", "CW15_AWeight", "RDN15_AWeight"),
+                                    labels = c("C. cyanus", "C. cyanus", "G. segetum", "G. segetum", 
+                                               "V. persica", "S. media", "L. purpureum"))
+
+seed_w_long$Species = factor(seed_w_long$Species, 
+                             levels = c("CF14_AWeight", "CF15_AWeight", "CM14_AWeight", "CM15_AWeight", 
+                                        "SW15_AWeight", "CW15_AWeight", "RDN15_AWeight"),
+                             labels = c("C. cyanus 2014", "C. cyanus 2015", "G. segetum 2014", "G. segetum 2015", 
+                                        "V. persica", "S. media", "L. purpureum"))
+
+# this makes the species names itlaic, but leaves the year not italic:
+levels(seed_w_long$Species) = c("italic('C. cyanus ')*(2014)", "italic('C. cyanus ')*(2015)",
+                                "italic('G. segetum ')*(2014)", "italic('G. segetum ')*(2015)",
+                                "italic('V. persica')", "italic('S. media')", "italic('L. purpureum')")
+
+
+
+
+vir_lite = function(cols, ds=0.4, dv=0.7) {
+  cols = rgb2hsv(col2rgb(cols))
+  cols["v", ] = cols["v", ] + dv*(1 - cols["v", ])
+  cols["s", ] = ds*cols["s", ]
+  apply(cols, 2, function(x) hsv(x[1], x[2], x[3]))
+}
+vir_lite(viridis(5), ds=0.7, dv=0.7)
+
+
+sn_plot = ggplot(seed_n_long, aes(x=Treatment, y=Seed_Number, fill=Species_colour)) +
+  geom_bar(position=position_dodge(0.7), width = 0.7, stat = 'summary', fun = mean, colour="black" , size=0.4) +
+  geom_point(aes(x = Treatment, y=Seed_Number), shape = 21, size = 1,
+             position = position_jitterdodge(jitter.width = 0.3, jitter.height=0, dodge.width=0.7)) +
+  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.7), size=0.4, width = 0.45) +
+  xlab("Treatment") +
+  ylab("Seeds per seedhead") +
+  facet_wrap(~ Species, ncol =3, scales = "free_y", labeller=label_parsed) + # need the labeller function to parse the italic text
+  scale_fill_manual(values = vir_lite(viridis(5), ds=0.6, dv=0.6), name = "Species") +
+  scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
+  guides(fill = guide_legend(label.theme = element_text(face = "italic", size = 9))) +
+  scale_y_continuous(expand = expansion(mult = c(0.003, 0.05))) +
+  theme_bw() + 
+  theme(legend.position="none",
+        axis.text = element_text(colour = "black"),
+        panel.spacing.y = unit(0.2, "lines"),
+        panel.spacing.x = unit(0.3, "lines"),
+        panel.grid.major.x = element_blank(),
+        strip.text.x = element_text(size = 10, margin = margin(0,0,0,0, "mm")),
+        axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+        axis.title.x=element_text(size=10, margin=margin(t=4, r=0, b=0, l=0)),
+        axis.title.y=element_text(size=10, margin=margin(t=0, r=4, b=0, l=0)),
+        axis.ticks = element_line(colour = "black", size = 0.4),
+        plot.margin=unit(c(1,1,1,1),"mm"))
+
+sw_plot = ggplot(seed_w_long, aes(x=Treatment, y=Seed_W_mg, fill=Species_colour)) +
+  geom_bar(position=position_dodge(0.7), width = 0.7, stat = 'summary', fun = mean, colour="black" , size=.4) +
+  geom_point(aes(x = Treatment, y=Seed_W_mg), shape = 21, size = 1,
+             position = position_jitterdodge(jitter.width = 0.3, jitter.height=0, dodge.width=0.7)) +
+  geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.7), size=0.4, width = 0.45) +
+  xlab("Treatment") +
+  ylab("Weight per seed (mg)") +
+  facet_wrap(~ Species, ncol =3, scales = "free_y", labeller=label_parsed) + # need the labeller function to parse the italic text
+  scale_fill_manual(values = vir_lite(viridis(5), ds=0.6, dv=0.6), name = "Species") + 
+  scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
+  guides(fill = guide_legend(label.theme = element_text(face = "italic", size = 9), ncol=3)) +
+  scale_y_continuous(expand = expansion(mult = c(0.003, 0.05))) +
+  theme_bw() +
+  theme(legend.title=element_text(size=10),
+        legend.text = element_text(size=9.5),
+        axis.text = element_text(colour = "black"),
+        panel.spacing.y = unit(0.2, "lines"),
+        panel.spacing.x = unit(0.4, "lines"),
+        panel.grid.major.x = element_blank(),
+        strip.text.x = element_text(size = 10, margin = margin(0,0,0,0, "mm")),
+        axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+        axis.title.x=element_text(size=10, margin=margin(t=-2, r=0, b=0, l=0)),
+        axis.title.y=element_text(size=10, margin=margin(t=0, r=1, b=0, l=0)),
+        axis.ticks = element_line(colour = "black", size = 0.4),
+        legend.margin = margin(t=15, r=0, b=0, l=0),
+        plot.margin=unit(c(1,1,1,1),"mm"))
+
+plot_panel = plot_grid(sn_plot,
+                       lemon::reposition_legend(sw_plot, 'center', panel=c('panel-3-2','panel-3-3'), plot=TRUE),
+                       labels = c("(A)", "(B)"),
+                       label_size = 11, #scale = 1, label_colour = "blue",
+                       #label_x = 0, label_y = 0.11,
+                       #vjust = -0.005,
+                       align = "v", axis = 'l',
+                       ncol = 1,
+                       rel_heights = c(1, 1.39))
+
+
+jpeg("Figures/Frontiers/Moss_Evans_Figure3_180x206.jpeg", units="mm", width=180, height=206, res=300, quality = 100,
+     type = "cairo")
+plot_grid(plot_panel)
+dev.off()
+
+
+
+#
