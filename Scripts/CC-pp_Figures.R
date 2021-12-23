@@ -1196,7 +1196,44 @@ vir_lite(viridis(5), ds=0.6, dv=0.6)
 # [1] "#A54CBB" "#899DD1" "#71D3CF" "#9EE9A2" "#FEF17C"
 
 
-jpeg("Figures/Frontiers/Moss_Evans_Figure1_180x62.jpeg", units="mm", width=180, height=62, res=300, quality = 100,
+# jpeg("Figures/Frontiers/Moss_Evans_Figure1_180x62.jpeg", units="mm", width=180, height=62, res=300, quality = 100,
+#      type = "cairo")
+# ggplot(nectar_long, aes(x=Treatment, y=Nectar, fill=Species)) +
+#   geom_bar(position=position_dodge(0.7), width = 0.7, stat = 'summary', fun = mean, colour="black" , size=0.4) +
+#   geom_point(aes(x = Treatment, y=Nectar), shape = 21, size = 1.1,
+#              position = position_jitterdodge(jitter.width = 0.3, jitter.height=0, dodge.width=0.7)) +
+#   geom_errorbar(stat = 'summary', fun.data = mean_se, position=position_dodge(0.7), size=0.4, width = 0.4) +
+#   xlab("Treatment") +
+#   ylab("Floral nectar volume (\U003BCL)") +
+#   facet_wrap(~ Species, nrow =1, scales = "free_y") +
+#   scale_fill_manual(values = c("#A54CBB", "#71D3CF", "#FEF17C"), labels = c("C. cyanus", "V. persica", "L. purpureum")) +
+#   guides(fill = guide_legend(label.theme = element_text(face = "italic",size = 9))) +
+#   scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
+#   scale_y_continuous(expand = expansion(mult = c(0.003, 0.05))) +
+#   theme_bw() +
+#   theme(legend.title=element_text(size=10),
+#         legend.text = element_text(size=9.5),
+#         axis.text = element_text(colour = "black"),
+#         axis.ticks = element_line(colour = "black", size = 0.4),
+#         panel.spacing.x = unit(0.3, "lines"),
+#         axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+#         panel.grid.major.x = element_blank(),
+#         strip.text.x = element_text(size = 10, margin = margin(1,0,1,0, "mm")),
+#         axis.title.y = element_text(size=10, margin=margin(t=0, r=5, b=0, l=0)),
+#         axis.title.x = element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
+#         strip.text = element_text(face = "italic"),
+#         legend.position = "bottom",
+#         legend.margin=margin(t=-2, r=0, b=0, l=-10),
+#         plot.margin=unit(c(1,1,1,1),"mm"))
+# dev.off()
+
+
+# Version with the treatments re-ordered after reviewer comments:
+nectar_long$Treatment = factor(nectar_long$Treatment, 
+                               levels = c("Control", "Water", "Heat", "Heat+Water"))
+str(nectar_long)
+
+jpeg("Figures/Frontiers/Moss_Evans_Figure1_Dec21_180x62.jpeg", units="mm", width=180, height=62, res=300, quality = 100,
      type = "cairo")
 ggplot(nectar_long, aes(x=Treatment, y=Nectar, fill=Species)) +
   geom_bar(position=position_dodge(0.7), width = 0.7, stat = 'summary', fun = mean, colour="black" , size=0.4) +
@@ -1208,7 +1245,7 @@ ggplot(nectar_long, aes(x=Treatment, y=Nectar, fill=Species)) +
   facet_wrap(~ Species, nrow =1, scales = "free_y") +
   scale_fill_manual(values = c("#A54CBB", "#71D3CF", "#FEF17C"), labels = c("C. cyanus", "V. persica", "L. purpureum")) +
   guides(fill = guide_legend(label.theme = element_text(face = "italic",size = 9))) +
-  scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
+  scale_x_discrete(labels = c("Control", "Water", "Heat", "Heat+\nWater")) +
   scale_y_continuous(expand = expansion(mult = c(0.003, 0.05))) +
   theme_bw() +
   theme(legend.title=element_text(size=10),
@@ -1246,6 +1283,11 @@ guild_df$Year = as.factor(guild_df$Year)
 guild_df$Guild = factor(guild_df$Guild, 
                         levels = c("Hoverfly","Fly","Honeybee","Wild_hym"),
                         labels = c("Syrphidae","Other Diptera","Apis mellifera","Other Hymenoptera"))
+
+# re-order the treatments after reviewer comments:
+str(plot_df)
+plot_df$Treatment = factor(plot_df$Treatment, 
+                           levels = c("Control", "Water", "Heat", "Heat+Water"))
 
 
 flowers_p = ggplot(plot_df, aes(x=Treatment, y=TotalFlowers, fill=Year)) +
@@ -1312,7 +1354,9 @@ guild_p = ggplot(guild_df, aes(x=Year, y=Proportion, fill=Guild)) +
   geom_bar(position = "stack", stat = "identity", width = 0.8) +
   xlab("Year") +
   ylab("Insect proportion") +
-  scale_fill_manual(values=c("#F1605DFF", "#B63679FF", "#721F81FF", "#2D1160FF"), name = "Insect guild") + # darkest 4 reverse magma(7)
+  scale_fill_manual(values=c("#F1605DFF", "#B63679FF", "#721F81FF", "#2D1160FF"),  # darkest 4 reverse magma(7)
+                    name = "Insect guild",
+                    labels = c("Syrphidae","Other Diptera", expression(italic("Apis mellifera")), "Other Hymenoptera")) +
   scale_y_continuous(expand = expansion(mult = c(0.0, 0.0)), limits = c(0, 1)) +
   theme_bw() +
   theme(legend.margin=margin(t=3, r=0, b=3, l=0))
@@ -1393,7 +1437,13 @@ panel_legend = get_legend(
 )
 
 
-jpeg("Figures/Frontiers/Moss_Evans_Figure2_180x155.jpeg", units="mm", width=180, height=155, res=300, quality = 100,
+# jpeg("Figures/Frontiers/Moss_Evans_Figure2_180x155.jpeg", units="mm", width=180, height=155, res=300, quality = 100,
+#      type = "cairo")
+# plot_grid(plot_panel, panel_legend, ncol = 1, rel_heights = c(1, 0.05))
+# dev.off()
+
+
+jpeg("Figures/Frontiers/Moss_Evans_Figure2_Dec21_180x155.jpeg", units="mm", width=180, height=155, res=300, quality = 100,
      type = "cairo")
 plot_grid(plot_panel, panel_legend, ncol = 1, rel_heights = c(1, 0.05))
 dev.off()
@@ -1401,7 +1451,55 @@ dev.off()
 
 
 #
-#### 8.3 Figure 3 - Seeds plots ####
+#### 8.3 Figure 3 - Community Composition plot ####
+
+# added this figure after reviewer comments.
+
+guild_t_df = read.csv("Data/GuildNumbers_AllTreatments_BothYears.csv",header=TRUE,sep=",", as.is=TRUE, na.strings="(null)")
+str(guild_t_df)
+head(guild_t_df)
+guild_t_df$Year = as.factor(guild_t_df$Year)
+guild_t_df$Guild = factor(guild_t_df$Guild, 
+                          levels = c("Hoverfly","Fly","Honeybee","Wild_hym"),
+                          labels = c("Syrphidae","Other Diptera","Apis mellifera","Other Hymenoptera"))
+
+
+str(guild_t_df)
+guild_t_df$Treatment = factor(guild_t_df$Treatment, 
+                              levels = c("Control", "Water", "Heat", "Heat+Water"))
+jpeg("Figures/Frontiers/Moss_Evans_Figure3_Dec21_180x62.jpeg", units="mm", width=180, height=62, res=300, quality = 100,
+     type = "cairo")
+ggplot(guild_t_df, aes(x=Treatment, y=Abundance, fill=Guild)) + 
+  geom_bar(position = "stack", stat = "identity", width = 0.8) +
+  xlab("Treatment") +
+  ylab("Visitor abundance") +
+  scale_fill_manual(values=c("#F1605DFF", "#B63679FF", "#721F81FF", "#2D1160FF"), name = "Insect guild",
+                    labels = c("Syphidae","Other Diptera", expression(italic("Apis mellifera")), "Other Hymenoptera")) +
+  scale_x_discrete(labels = c("Control", "Water", "Heat", "Heat+\nWater")) +
+  scale_y_continuous(expand = expansion(mult = c(0.003, 0.05))) +
+  facet_wrap(~ Year, nrow = 1) +
+  theme_bw() +
+  theme(legend.text.align = 0,
+        legend.title=element_text(size=10),
+        legend.text = element_text(size=9.5),
+        axis.text = element_text(colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 0.4),
+        panel.spacing.x = unit(0.3, "lines"),
+        axis.text.x=element_text(size=9.5, margin=margin(t=1, r=0, b=0, l=0)),
+        panel.grid.major.x = element_blank(),
+        strip.text.x = element_text(size = 10, margin = margin(1,0,1,0, "mm")),
+        axis.title.y = element_text(size=10, margin=margin(t=0, r=5, b=0, l=0)),
+        axis.title.x = element_text(size=10, margin=margin(t=5, r=0, b=0, l=0)),
+        legend.margin=margin(t=-2, r=0, b=0, l=0),
+        plot.margin=unit(c(1,1,1,1),"mm"))
+dev.off()
+
+
+
+#
+#### 8.4 Figure 4 - Seeds plots ####
+
+# (this is now figure 4)
 
 multi_df = read.csv("Data/AllData_MultiPlot_BothYears.csv",header=TRUE,sep=",", as.is=TRUE, na.strings="(null)")
 str(multi_df)
@@ -1466,6 +1564,11 @@ levels(seed_w_long$Species) = c("italic('C. cyanus ')*(2014)", "italic('C. cyanu
                                 "italic('V. persica')", "italic('S. media')", "italic('L. purpureum')")
 
 
+# re-order the treatment levels after reviewer comments:
+seed_w_long$Treatment = factor(seed_w_long$Treatment,
+                               levels = c("Control", "Water", "Heat", "Heat+Water"))
+seed_n_long$Treatment = factor(seed_n_long$Treatment,
+                               levels = c("Control", "Water", "Heat", "Heat+Water"))
 
 
 vir_lite = function(cols, ds=0.4, dv=0.7) {
@@ -1486,7 +1589,7 @@ sn_plot = ggplot(seed_n_long, aes(x=Treatment, y=Seed_Number, fill=Species_colou
   ylab("Seeds per seedhead") +
   facet_wrap(~ Species, ncol =3, scales = "free_y", labeller=label_parsed) + # need the labeller function to parse the italic text
   scale_fill_manual(values = vir_lite(viridis(5), ds=0.6, dv=0.6), name = "Species") +
-  scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
+  scale_x_discrete(labels = c("Control", "Water", "Heat", "Heat+\nWater")) +
   guides(fill = guide_legend(label.theme = element_text(face = "italic", size = 9))) +
   scale_y_continuous(expand = expansion(mult = c(0.003, 0.05))) +
   theme_bw() + 
@@ -1511,7 +1614,7 @@ sw_plot = ggplot(seed_w_long, aes(x=Treatment, y=Seed_W_mg, fill=Species_colour)
   ylab("Weight per seed (mg)") +
   facet_wrap(~ Species, ncol =3, scales = "free_y", labeller=label_parsed) + # need the labeller function to parse the italic text
   scale_fill_manual(values = vir_lite(viridis(5), ds=0.6, dv=0.6), name = "Species") + 
-  scale_x_discrete(labels = c("Control", "Heat", "Heat+\nWater", "Water")) +
+  scale_x_discrete(labels = c("Control", "Water", "Heat", "Heat+\nWater")) +
   guides(fill = guide_legend(label.theme = element_text(face = "italic", size = 9), ncol=3)) +
   scale_y_continuous(expand = expansion(mult = c(0.003, 0.05))) +
   theme_bw() +
@@ -1540,7 +1643,13 @@ plot_panel = plot_grid(sn_plot,
                        rel_heights = c(1, 1.39))
 
 
-jpeg("Figures/Frontiers/Moss_Evans_Figure3_180x206.jpeg", units="mm", width=180, height=206, res=300, quality = 100,
+# jpeg("Figures/Frontiers/Moss_Evans_Figure3_180x206.jpeg", units="mm", width=180, height=206, res=300, quality = 100,
+#      type = "cairo")
+# plot_grid(plot_panel)
+# dev.off()
+
+
+jpeg("Figures/Frontiers/Moss_Evans_Figure4_Dec21_180x206.jpeg", units="mm", width=180, height=206, res=300, quality = 100,
      type = "cairo")
 plot_grid(plot_panel)
 dev.off()
