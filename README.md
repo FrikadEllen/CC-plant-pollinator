@@ -1,5 +1,5 @@
 # CC-plant-pollinator
-All data files and scripts for my simulated climate change field experiment on plant-pollinator interactions.
+All data files and scripts for my simulated climate change field experiment on plant-pollinator interactions. The paper was published open access: https://www.frontiersin.org/articles/10.3389/fpls.2022.826205/full
 
 
 ## Scripts
@@ -7,7 +7,7 @@ All data files and scripts for my simulated climate change field experiment on p
 * CC-pp_Community-analysis.r - PERMANOVA analysis of the plant and insect communities, using package vegan.
 * CC-pp_Plot-level-analysis.R - Regression analyses of all plot-level variables (1 value per plot per year).
 * CC-pp_Seeds-nectar-analysis.R - Regression analyses of all seed and nectar data (multiple values per plot per year).
-* CC-pp_Figures.R - Code for creating the figures used in the current version of the manuscript.
+* CC-pp_Figures.R - Code for creating the figures used in the manuscript.
 
 
 ## Data Files
@@ -20,7 +20,7 @@ All data files and scripts for my simulated climate change field experiment on p
 
 
 ## Experiment Methodology
-Full details can be found in the published paper for this research.
+Full details can be found in the published paper for this research (https://www.frontiersin.org/article/10.3389/fpls.2022.826205).
 
 We ran an outdoor, open-air, simulated climate-warming experiment on an arable farm in the UK (Stockbridge Technology Centre in North Yorkshire (53o49’N–1o9’W)) for two years, to investigate the impact of climate change on arable wildflowers and flower-visiting insects. The experiment consisted of 24 outdoor 2 x 2 m plots in an agricultural field, separated by 2m buffers, in a randomised block design with 6 replicates of four treatments: 1.5°C increase in temperature above ambient (‘Heat’); 40% increase in precipitation (‘Water’); warming and precipitation treatments combined (‘Heat+Water’); and ambient conditions (‘Control’). The heated plots were warmed with non-convective infrared heaters suspended 1.5 m above them operating continuously from the date of assembly (16/04/14 and 15/04/15) until end of sampling (19/08/14 and 18/08/2015). The plots and buffers were sown with spring wheat (Triticum aestivum cultivar Tybalt) and the plots were additionally sown with an arable wildflower seed mixture.
 
